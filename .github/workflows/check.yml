@@ -1,0 +1,29 @@
+name: check
+
+# La config de un editor falla en silencio: un LSP que no arranca no da un
+# error, simplemente no autocompleta. Esto comprueba las dos cosas que si se
+# pueden comprobar sin abrir nvim -- que el Lua es valido y que el paquete
+# evalua -- para que el silencio signifique algo.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lua:
+    name: luacheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y lua-check
+      - run: luacheck config/
+
+  nix:
+    name: nix flake check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - run: nix flake check --no-build
