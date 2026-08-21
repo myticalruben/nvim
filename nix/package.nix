@@ -63,8 +63,11 @@ let
     zsh
 
     # Un LSP o formateador por cada extra de config/lazyvim.json que lo pide.
-    # Mason no aparece aqui a proposito: descarga binarios precompilados que
-    # en NixOS no enlazan, y en el resto duplican lo que ya hay en el store.
+    # Mason sigue instalando por su cuenta lo que no esta en esta lista
+    # (jdtls, ktlint, los adaptadores de depuracion). Se queda asi a
+    # proposito: bajar de esta lista significaria perder esos lenguajes. Lo
+    # que si importa es que en NixOS los binarios de mason no enlazan, y ahi
+    # la salida es anadir el paquete de Nix a extraPackages.
     lua-language-server
     stylua
     vscode-langservers-extracted   # json, html, css, eslint
@@ -90,25 +93,42 @@ let
   # la maquina; meter otro desde Nix solo serviria para que discrepara del
   # cargo con el que se compila.
 
-  # Enlaza ~/.config/<appName> a la config del store antes de arrancar.
+  # Deja la config del store en ~/.config/<appName> antes de arrancar, y la
+  # refresca cuando el paquete cambia.
   #
-  # Es un rodeo, y tiene motivo: la forma directa seria exportar
-  # XDG_CONFIG_HOME al store, pero eso lo heredan los procesos que nvim lanza
-  # -- :terminal, lazygit, git -- y a esos les quitaria su propia config sin
-  # decir nada. NVIM_APPNAME solo lo mira neovim.
-  linkConfig = ''
+  # Es una copia y no un enlace por una razon concreta: lazy.nvim escribe
+  # lazy-lock.json dentro de stdpath("config") en cuanto instala un plugin, y
+  # si no puede, no avisa -- aborta el arranque entero con un assert. LazyVim
+  # hace lo mismo con lazyvim.json al migrar de version. Un directorio de
+  # config de solo lectura no es una limitacion aceptable, es un editor que no
+  # abre.
+  #
+  # La copia se rehace cuando cambia la ruta del store, asi que lo que se edite
+  # ahi dentro dura hasta la siguiente actualizacion del paquete. Es
+  # deliberado: en esta variante la fuente de la verdad es el repo.
+  #
+  # Y va por NVIM_APPNAME en vez de por XDG_CONFIG_HOME porque lo segundo lo
+  # heredarian los procesos que nvim lanza -- :terminal, git, lazygit -- y les
+  # quitaria su propia config sin decir nada.
+  syncConfig = ''
     nvim_appdir="''${XDG_CONFIG_HOME:-$HOME/.config}/${appName}"
     nvim_want="${configDir}"
+    nvim_stamp="$nvim_appdir/.nix-config"
+
     if [ -L "$nvim_appdir" ]; then
-      if [ "$(readlink "$nvim_appdir")" != "$nvim_want" ]; then
-        rm "$nvim_appdir" && ln -s "$nvim_want" "$nvim_appdir"
-      fi
-    elif [ -e "$nvim_appdir" ]; then
-      echo "nvim: $nvim_appdir existe y no es un enlace a /nix/store." >&2
+      rm "$nvim_appdir"                       # una version anterior enlazaba
+    elif [ -d "$nvim_appdir" ] && [ ! -e "$nvim_stamp" ]; then
+      echo "nvim: $nvim_appdir existe y no lo ha puesto este paquete." >&2
       echo "nvim: quitalo a mano o cambia appName; no lo voy a borrar yo." >&2
       exit 1
-    else
-      mkdir -p "$(dirname "$nvim_appdir")" && ln -s "$nvim_want" "$nvim_appdir"
+    fi
+
+    if [ "$(cat "$nvim_stamp" 2>/dev/null)" != "$nvim_want" ]; then
+      rm -rf "$nvim_appdir"
+      mkdir -p "$(dirname "$nvim_appdir")"
+      cp -r "$nvim_want" "$nvim_appdir"
+      chmod -R u+w "$nvim_appdir"             # del store sale sin permiso de escritura
+      printf '%s\n' "$nvim_want" > "$nvim_stamp"
     fi
   '';
 in
@@ -126,6 +146,6 @@ pkgs.runCommandLocal "nvim${lib.optionalString (!withConfig) "-tools"}"
     --prefix PATH : ${lib.makeBinPath runtimeDeps} \
     ${lib.optionalString withConfig ''
       --set NVIM_APPNAME ${appName} \
-      --run ${lib.escapeShellArg linkConfig} \
+      --run ${lib.escapeShellArg syncConfig} \
     ''}
 ''

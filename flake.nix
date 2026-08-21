@@ -29,7 +29,7 @@
         config = nvim.configDir;
       });
 
-      homeModules.default = import ./nix/home-manager.nix { inherit self; };
+      homeModules.default = import ./nix/home-manager.nix;
       # home-manager acepto `homeModules` hace poco; el nombre viejo sigue
       # siendo el que buscan las configuraciones que no se han actualizado.
       homeManagerModules = self.homeModules;

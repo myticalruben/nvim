@@ -2,22 +2,24 @@
 # decision de donde vive la config, que es la misma que ya toma el flake de
 # .dotfiles con su bandera mutableConfigs:
 #
-#   source = null   - copia inmutable en el store. La maquina arranca con esta
-#                     config y no hay nada que editar.
-#   source = "ruta" - enlace fuera del store al checkout, asi que editar
-#                     ~/.config/nvim edita el repo. La maquina de diario.
+#   source = "ruta" - ~/.config/nvim es un enlace al checkout, asi que
+#                     editarlo edita el repo. La maquina de diario.
+#   source = null   - la config viaja dentro del paquete y no hay checkout que
+#                     valga. La maquina que tiene que arrancar del flake y
+#                     nada mas.
 #
-# En los dos casos ~/.config/nvim es un nvim normal y corriente: el binario que
-# se instala aqui es la variante sin config dentro.
-{ self }:
+# Los dos casos instalan un ejecutable llamado `nvim`; lo que cambia es de
+# donde lee. El caso inmutable no toca ~/.config/nvim en absoluto: usa
+# NVIM_APPNAME, porque la config tiene que acabar en un sitio donde lazy.nvim
+# pueda escribir su lockfile. Ver el comentario largo en package.nix.
 { config, lib, pkgs, ... }:
 
 let
   cfg = config.programs.nvimConfig;
   package = import ./package.nix {
     inherit pkgs;
-    withConfig = false;
-    inherit (cfg) extraPackages;
+    withConfig = cfg.source == null;
+    inherit (cfg) extraPackages appName;
   };
 in
 {
@@ -30,7 +32,7 @@ in
       example = "/home/ruben/nvim/config";
       description = ''
         Ruta al directorio config/ del checkout, para editar en caliente.
-        null deja la copia del store, que es de solo lectura.
+        null instala la config dentro del propio paquete.
       '';
     };
 
@@ -40,14 +42,22 @@ in
       example = lib.literalExpression "[ pkgs.jdt-language-server ]";
       description = "Herramientas extra en el PATH de nvim.";
     };
+
+    appName = lib.mkOption {
+      type = lib.types.str;
+      default = "nvim-nix";
+      description = ''
+        NVIM_APPNAME de la variante inmutable: manda en ~/.config/<appName> y
+        ~/.local/share/<appName>. Sin efecto si source apunta a un checkout.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
     home.packages = [ package ];
 
-    xdg.configFile."nvim".source =
-      if cfg.source == null
-      then self.packages.${pkgs.stdenv.hostPlatform.system}.config
-      else config.lib.file.mkOutOfStoreSymlink cfg.source;
+    xdg.configFile = lib.mkIf (cfg.source != null) {
+      "nvim".source = config.lib.file.mkOutOfStoreSymlink cfg.source;
+    };
   };
 }
