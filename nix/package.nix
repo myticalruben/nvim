@@ -82,6 +82,9 @@ let
     taplo                          # toml
     marksman                       # markdown
     shfmt
+    nil                            # nix
+    statix                         # nix, linter
+    nixfmt                         # nix, formateador
   ])
   # Sin esto "+y no sale de nvim. Solo existe en Linux, y dejarlo fuera del
   # resto es lo que permite que el paquete evalue tambien en macOS.
