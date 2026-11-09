@@ -36,6 +36,8 @@ return {
 					"--glob", "!.kotlin/**",
 					"--glob", "!.idea/**",
 					"--glob", "!out/**",
+					"--glob", "!gradle/**",
+					"--glob", "!_test-logs/**",
 				},
 			},
 			pickers = {
@@ -65,6 +67,8 @@ return {
 						"--exclude", ".kotlin",
 						"--exclude", ".idea",
 						"--exclude", "out",
+						"--exclude", "gradle",
+						"--exclude", "_test-logs",
 					},
 				},
 			},
