@@ -38,7 +38,7 @@
       # es lo mismo que lo que hace falta para usarla.
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
-          packages = with pkgs; [ lua-language-server stylua luajitPackages.luacheck ];
+          packages = with pkgs; [ lua-language-server stylua luajitPackages.luacheck nil nixfmt ];
         };
       });
 

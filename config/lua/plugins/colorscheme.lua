@@ -1,8 +1,2 @@
-return {
-	"folke/tokyonight.nvim",
-	lazy = true,
-	opts = {
-		style = "night",
-		transparent = true,
-	},
-}
+-- LazyVim ya trae tokyonight en "night"; aqui solo lo transparente.
+return { "folke/tokyonight.nvim", opts = { transparent = true } }

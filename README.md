@@ -3,11 +3,14 @@
 Mi config de Neovim (LazyVim), empaquetada con Nix para poder instalarla en
 una maquina limpia con un solo comando.
 
-Lo que aporta el flake sobre clonar el repo en `~/.config/nvim` es el PATH: la
-mitad de lo que hace LazyVim son programas externos -- `ripgrep` para buscar,
-`gcc` para compilar los parsers de treesitter, un LSP por lenguaje -- y cuando
-falta uno no salta ningun error, el plugin simplemente no hace nada. El
-paquete los trae todos dentro.
+El paquete trae el editor y las herramientas **del editor**: `ripgrep`, `fd`,
+`git`, un compilador para los parsers de treesitter, `nil`/`nixfmt` para los
+`flake.nix` y `prettier`/`marksman` para markdown y json. Los servidores de
+lenguaje no van dentro: los pone el devShell del
+proyecto, con las plantillas de
+[nix-templates](https://github.com/myticalruben/nix-templates). Asi el mismo
+nvim sirve para Java, Rust, C/C++, Python y frontend sin arrastrar seis
+toolchains ni duplicarlas.
 
 ## Usarlo
 
@@ -36,6 +39,36 @@ no puede, aborta el arranque con un assert en vez de avisar. La consecuencia
 practica es que lo que edites en esa copia dura hasta el siguiente
 `nix profile upgrade`; los cambios de verdad van al repo.
 
+## Lenguajes: los pone el proyecto
+
+| Lenguaje | Plantilla | Lo que deja en el PATH |
+| --- | --- | --- |
+| Java | `java` | `jdtls`, `google-java-format`, JDK |
+| Rust | `rust` | `rust-analyzer`, `taplo`, `cargo` |
+| C/C++ | `c` | `gcc`, `clangd`, `clang-format`, `cmake`, `neocmakelsp`, `gdb` |
+| Python | `python` | `pyright` (tipos) + `ruff` (lint y formato), `uv`, python |
+| Angular | `frontend` (`.#angular`) | `vtsls`, `angular-language-server`, node, pnpm |
+| React | `frontend` (`.#react`) | `vtsls`, node, pnpm |
+
+Para que nvim los vea, el devShell tiene que estar activo en la shell desde la
+que lo abres:
+
+```sh
+cd mi-proyecto      # .envrc con `use flake`
+nvim
+```
+
+Una sola vez por maquina hacen falta dos cosas: `nix` en el PATH (el instalador
+ya anade `~/.nix-profile/etc/profile.d/nix.sh` a `~/.profile`) y el hook de
+direnv en `~/.bashrc`:
+
+```sh
+eval "$(direnv hook bash)"
+```
+
+Y `direnv allow` una vez por proyecto. Fuera de un devShell no hay LSP: es
+deliberado, el editor no adivina con que toolchain se compila el proyecto.
+
 ## Desde otro flake
 
 ```nix
@@ -61,7 +94,7 @@ programs.nvimConfig = {
   # arrancar del flake y nada mas.
   source = "/home/ruben/nvim/config";
 
-  # Los LSP que no vienen de serie se enchufan aqui.
+  # Los binarios que ninguna plantilla trae se enchufan aqui.
   extraPackages = [ ];
 };
 ```
@@ -70,11 +103,11 @@ programs.nvimConfig = {
 
 | Salida | Que es |
 | --- | --- |
-| `packages.<sys>.default` | neovim + config + herramientas. Lo que corre `nix run`. |
+| `packages.<sys>.default` | neovim + config + herramientas del editor. Lo que corre `nix run`. |
 | `packages.<sys>.nvim-tools` | neovim + herramientas, sin config. Lo que instala el modulo. |
 | `packages.<sys>.config` | solo los `.lua`, para colocarlos a mano. Ojo: si acaban en un sitio de solo lectura, lazy.nvim no arranca. |
 | `homeModules.default` | el modulo de home-manager de arriba. |
-| `devShells.<sys>.default` | `lua-language-server`, `stylua`, `luacheck`. |
+| `devShells.<sys>.default` | `lua-language-server`, `stylua`, `luacheck`, `nil`, `nixfmt`. |
 | `checks.<sys>.luacheck` | lo que corre el CI. |
 
 ## Que hay dentro
@@ -82,7 +115,7 @@ programs.nvimConfig = {
 ```
 config/          lo que acaba en ~/.config/nvim
   init.lua
-  lua/config/    opciones, atajos, colores, arranque de lazy.nvim
+  lua/config/    opciones, atajos, arranque de lazy.nvim
   lua/plugins/   lo propio encima de LazyVim
   lazyvim.json   los extras de LazyVim activados
   lazy-lock.json las versiones exactas de cada plugin
@@ -90,19 +123,28 @@ nix/package.nix  el paquete, y la lista de herramientas del PATH
 nix/home-manager.nix
 ```
 
-Mason sigue ahi para lo que la lista no cubre (jdtls, ktlint, los adaptadores
-de depuracion): quitarlo significaria perder esos lenguajes. En NixOS sus
-binarios no enlazan, y la salida es anadir el paquete de Nix equivalente a
-`extraPackages`.
+`config/lua/config/options.lua` lo carga LazyVim **despues** de sus propios
+defaults, que es lo que hace que lo que pongas ahi gane. No lo requires desde
+`init.lua` o LazyVim lo pisa al arrancar.
 
-Rust es la otra excepcion de la lista de herramientas: `config/lua/plugins/rust.lua`
-resuelve `rust-analyzer` con `rustup which`, asi que manda el toolchain de la
-maquina. Meter otro desde Nix solo serviria para que discrepara del `cargo` con
-el que compilas.
+## Mason
 
-## Trabajar en la config
+Desactivado a proposito (`config/lua/plugins/mason.lua`). Bajaria otra vez los
+mismos LSP que ya estan en el devShell del proyecto, y su `bin/` iria delante en
+el PATH, tapando al binario correcto. Si falta una herramienta, el sitio es la
+plantilla del proyecto o `extraPackages`; no Mason.
+
+## Depuracion
+
+DAP queda fuera a proposito: los adaptadores (`codelldb`, `debugpy`,
+`java-debug`) son lo unico que falta para depurar y no tiene sentido meterlos en
+el editor si cada proyecto usa su version. Sin ellos nvim no abre sesiones de
+debug; LSP, formateo y tests funcionan igual. Cuando una plantilla los traiga,
+se vuelve a activar el extra `dap.core` y listo.
+
+## Editar esta config
 
 ```sh
-nix develop      # lua-language-server, stylua, luacheck
+nix develop      # lua-language-server, stylua, luacheck, nil, nixfmt
 luacheck config/
 ```

@@ -37,10 +37,10 @@ let
     cp -r ${configSrc} $out
   '';
 
-  # Todo lo que la config llama por su nombre y espera encontrar en el PATH.
-  # Si algo de esto falta, nvim no da un error: el plugin correspondiente
-  # simplemente no hace nada, que es exactamente el tipo de fallo silencioso
-  # que este paquete existe para evitar.
+  # Editor y herramientas DEL EDITOR. Los servidores de lenguaje no van aqui:
+  # los pone el devShell del proyecto (github:myticalruben/nix-templates), que
+  # es el unico que sabe que version de JDK, rust o node usa ese proyecto. Si
+  # algo de esto falta, nvim no da un error: el plugin simplemente no hace nada.
   runtimeDeps = (with pkgs; [
     # Lo que LazyVim da por sentado.
     ripgrep
@@ -56,45 +56,21 @@ let
     gnumake
     tree-sitter
 
-    nodejs         # varios LSP y formateadores son paquetes de npm
+    # Nix es el idioma de los flake.nix de todos los proyectos.
+    nil
+    nixfmt
 
-    # config/lua/config/base.lua fija `shell = "zsh"`. En la maquina de
-    # diario ya esta; en una limpia, :terminal y :! fallarian sin esto.
-    zsh
+    # Markdown no tiene plantilla: es el unico LSP que se queda aqui.
+    marksman
 
-    # Un LSP o formateador por cada extra de config/lazyvim.json que lo pide.
-    # Mason sigue instalando por su cuenta lo que no esta en esta lista
-    # (jdtls, ktlint, los adaptadores de depuracion). Se queda asi a
-    # proposito: bajar de esta lista significaria perder esos lenguajes. Lo
-    # que si importa es que en NixOS los binarios de mason no enlazan, y ahi
-    # la salida es anadir el paquete de Nix a extraPackages.
-    lua-language-server
-    stylua
-    vscode-langservers-extracted   # json, html, css, eslint
-    typescript-language-server
-    angular-language-server
-    emmet-language-server
-    prettierd
-    pyright
-    ruff
-    clang-tools                    # clangd
-    cmake-language-server
-    taplo                          # toml
-    marksman                       # markdown
-    shfmt
-    nil                            # nix
-    statix                         # nix, linter
-    nixfmt                         # nix, formateador
+    # Formateador de markdown/json/yaml. LazyVim lo cablea para esos tipos en
+    # cualquier proyecto; no es una herramienta de lenguaje.
+    prettier
   ])
   # Sin esto "+y no sale de nvim. Solo existe en Linux, y dejarlo fuera del
   # resto es lo que permite que el paquete evalue tambien en macOS.
   ++ lib.optional pkgs.stdenv.hostPlatform.isLinux pkgs.wl-clipboard
   ++ extraPackages;
-
-  # rust no esta en la lista. config/lua/plugins/rust.lua resuelve
-  # rust-analyzer con `rustup which`, asi que el que manda es el toolchain de
-  # la maquina; meter otro desde Nix solo serviria para que discrepara del
-  # cargo con el que se compila.
 
   # Deja la config del store en ~/.config/<appName> antes de arrancar, y la
   # refresca cuando el paquete cambia.
