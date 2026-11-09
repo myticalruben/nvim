@@ -127,6 +127,25 @@ nix/home-manager.nix
 defaults, que es lo que hace que lo que pongas ahi gane. No lo requires desde
 `init.lua` o LazyVim lo pisa al arrancar.
 
+## Iconos
+
+LazyVim dibuja los iconos con `mini.icons` (glifos de **Nerd Font v3**). El
+editor solo emite el caracter; quien lo dibuja es el terminal, asi que la fuente
+va en la maquina desde la que te conectas, no en este paquete:
+
+- **Windows Terminal**: `winget install DEVCOM.JetBrainsMonoNerdFont`, y en
+  Ajustes > Perfiles > Predeterminados > Apariencia > Fuente:
+  `JetBrainsMono Nerd Font Mono`. Cierra todas las ventanas y vuelve a abrir.
+- **VS Code**: `"terminal.integrated.fontFamily": "JetBrainsMono Nerd Font Mono"`.
+- **macOS**: `brew install --cask font-jetbrains-mono-nerd-font`.
+
+Prueba rapida dentro de la sesion: `printf '\U000F0214  \U000F024B\n'`. Si
+salen cuadros, la fuente no esta o es una Nerd Font v2 (p. ej. `MesloLGS NF` de
+powerlevel10k): las v2 no tienen los glifos v3 y unos iconos saldran y otros no.
+
+Si no puedes cambiar la fuente del terminal, `mini.icons` acepta
+`style = "ascii"` y los iconos de archivo pasan a texto plano.
+
 ## Mason
 
 Desactivado a proposito (`config/lua/plugins/mason.lua`). Bajaria otra vez los
