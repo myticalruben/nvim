@@ -12,6 +12,8 @@ proyecto, con las plantillas de
 nvim sirve para Java, Rust, C/C++, Python y frontend sin arrastrar seis
 toolchains ni duplicarlas.
 
+Los atajos de teclado estan en [ATAJOS.md](ATAJOS.md).
+
 ## Usarlo
 
 Probarlo sin instalar nada:
