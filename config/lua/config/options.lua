@@ -6,6 +6,10 @@
 -- clipboard, cursorline, termguicolors, formatoptions...). Solo va lo que se
 -- aparta de su valor.
 
+-- Proyecto: sin git (plantillas de nix) el root se quedaba en el directorio
+-- actual. `flake.nix` y `.envrc` marcan la raiz igual que `.git`.
+vim.g.root_spec = { "lsp", { ".git", "flake.nix", ".envrc" }, "cwd" }
+
 -- Python: la plantilla del proyecto trae ruff (lint/formato) y pyright (tipos).
 -- Con "pyright", LazyVim activa pyright Y ruff.
 vim.g.lazyvim_python_lsp = "pyright"

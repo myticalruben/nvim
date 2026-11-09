@@ -1,0 +1,65 @@
+-- El picker de LazyVim usa `rg`/`fd`, y fuera de un repo git esos no leen
+-- `.gitignore` (los proyectos que salen de nix-templates no son repos hasta que
+-- haces `git init`). Por eso aparecian `.venv`, `node_modules`, `.direnv`,
+-- `target`, `build`... La lista de exclusiones replica los `.gitignore` de las
+-- plantillas, asi vale tambien sin git.
+return {
+	{
+		"nvim-telescope/telescope.nvim",
+		opts = {
+			defaults = {
+				vimgrep_arguments = {
+					"rg",
+					"--color=never",
+					"--no-heading",
+					"--with-filename",
+					"--line-number",
+					"--column",
+					"--smart-case",
+					"--hidden",
+					"--glob", "!.git",
+					"--glob", "!node_modules/**",
+					"--glob", "!.direnv/**",
+					"--glob", "!.venv/**",
+					"--glob", "!venv/**",
+					"--glob", "!__pycache__/**",
+					"--glob", "!.pytest_cache/**",
+					"--glob", "!.mypy_cache/**",
+					"--glob", "!.ruff_cache/**",
+					"--glob", "!target/**",
+					"--glob", "!build/**",
+					"--glob", "!dist/**",
+					"--glob", "!.angular/**",
+					"--glob", "!result",
+					"--glob", "!result-*",
+				},
+			},
+			pickers = {
+				find_files = {
+					hidden = true,
+					find_command = {
+						"fd",
+						"--type", "f",
+						"--color", "never",
+						"--hidden",
+						"--exclude", ".git",
+						"--exclude", "node_modules",
+						"--exclude", ".direnv",
+						"--exclude", ".venv",
+						"--exclude", "venv",
+						"--exclude", "__pycache__",
+						"--exclude", ".pytest_cache",
+						"--exclude", ".mypy_cache",
+						"--exclude", ".ruff_cache",
+						"--exclude", "target",
+						"--exclude", "build",
+						"--exclude", "dist",
+						"--exclude", ".angular",
+						"--exclude", "result",
+						"--exclude", "result-*",
+					},
+				},
+			},
+		},
+	},
+}
