@@ -4,4 +4,6 @@
 return {
 	{ "mason-org/mason.nvim", enabled = false },
 	{ "mason-org/mason-lspconfig.nvim", enabled = false },
+	-- Depende de mason.nvim y LazyVim lo cargaria al arrancar nvim-dap.
+	{ "jay-babu/mason-nvim-dap.nvim", enabled = false },
 }

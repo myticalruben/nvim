@@ -18,3 +18,19 @@ vim.opt.inccommand = "split"
 vim.opt.pumblend = 5
 vim.opt.path:append({ "**" })
 vim.opt.wildignore:append({ "*/node_modules/*" })
+
+-- Rust: rustaceanvim toma el adaptador de aqui. LazyVim solo lo configura si
+-- tienes Mason; con la plantilla, codelldb viene del devShell.
+local codelldb = vim.fn.exepath("codelldb")
+if codelldb ~= "" then
+	vim.g.rustaceanvim = vim.tbl_deep_extend("force", vim.g.rustaceanvim or {}, {
+		dap = {
+			adapter = {
+				type = "server",
+				host = "127.0.0.1",
+				port = "${port}",
+				executable = { command = codelldb, args = { "--port", "${port}" } },
+			},
+		},
+	})
+end

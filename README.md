@@ -136,11 +136,19 @@ plantilla del proyecto o `extraPackages`; no Mason.
 
 ## Depuracion
 
-DAP queda fuera a proposito: los adaptadores (`codelldb`, `debugpy`,
-`java-debug`) son lo unico que falta para depurar y no tiene sentido meterlos en
-el editor si cada proyecto usa su version. Sin ellos nvim no abre sesiones de
-debug; LSP, formateo y tests funcionan igual. Cuando una plantilla los traiga,
-se vuelve a activar el extra `dap.core` y listo.
+DAP funciona dentro del devShell del proyecto, con el adaptador que trae la
+plantilla:
+
+| Lenguaje | Adaptador | Lo pone |
+| --- | --- | --- |
+| Java | `java-debug` via `JAVA_DEBUG_BUNDLES` | plantilla `java` |
+| Rust | `codelldb` | plantilla `rust` |
+| C/C++ | `codelldb` | plantilla `c` |
+| Python | `debugpy-adapter` | plantilla `python` |
+| Angular/React | `js-debug-adapter` | plantilla `frontend` |
+
+Fuera del devShell no hay adaptador y el depurador no arranca: el mismo
+principio que los LSP. El extra `dap.core` de LazyVim pone los atajos y la UI.
 
 ## Editar esta config
 
