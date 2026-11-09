@@ -175,3 +175,9 @@ principio que los LSP. El extra `dap.core` de LazyVim pone los atajos y la UI.
 nix develop      # lua-language-server, stylua, luacheck, nil, nixfmt
 luacheck config/
 ```
+
+Dentro de nvim, `<leader>uR` (o `:NvimReset`) reinicia el editor y vuelve a
+cargar la config, restaurando la sesion (mismos buffers y ventanas). Antes
+arranca el wrapper del paquete para refrescar `~/.config/nvim-nix` si acabas de
+hacer `nix profile upgrade`. Aborta si hay buffers sin guardar, y los terminales
+abiertos no se restauran (mksession no los guarda).
