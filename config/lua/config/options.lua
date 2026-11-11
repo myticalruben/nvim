@@ -38,3 +38,13 @@ if codelldb ~= "" then
 		},
 	})
 end
+
+-- El tema sigue al wallpaper. neon/init.lua lee ~/.cache/waybar/palette.css (lo
+-- genera el dotfiles) y lo reaplica cuando cambia. VimEnter cubre tambien
+-- sesiones sin UI (headless, tests); VeryLazy reaplica cuando LazyVim ya cargo.
+local function start_neon()
+	require("neon").setup()
+end
+
+vim.api.nvim_create_autocmd("VimEnter", { once = true, callback = start_neon })
+vim.api.nvim_create_autocmd("User", { pattern = "VeryLazy", once = true, callback = start_neon })

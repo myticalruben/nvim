@@ -129,6 +129,45 @@ nix/home-manager.nix
 defaults, que es lo que hace que lo que pongas ahi gane. No lo requires desde
 `init.lua` o LazyVim lo pisa al arrancar.
 
+## Tema neon segun el wallpaper
+
+El dotfiles ya adapta waybar y GTK al fondo: `waybar/scripts/theme.sh` saca una
+paleta del wallpaper y la escribe en `~/.cache/waybar/palette.css` como
+`@define-color neon_*`. nvim lee ese mismo archivo, asi que el editor cambia de
+color con el escritorio:
+
+- Al arrancar aplica la paleta que encuentre (si no hay, usa la neon por
+  defecto).
+- Un `fs_event` sobre `~/.cache/waybar` reaplica el tema en cuanto el dotfiles
+  reescribe `palette.css`.
+- Tambien reaplica al volver a la ventana (`FocusGained`) y tras cargar un
+  plugin, para que telescope/snacks/etc. no se queden con los colores viejos.
+
+Comandos:
+
+```vim
+:NeonReload    " relee la paleta y reaplica el tema
+:NeonPalette   " muestra de donde salio la paleta y los acentos
+```
+
+Para probar sin el dotfiles, apunta a otro archivo:
+
+```sh
+NVIM_NEON_PALETTE=/tmp/palette.css nvim
+```
+
+El archivo es el mismo formato de waybar:
+
+```css
+@define-color neon_solid #05080f;
+@define-color neon_bg rgba(5, 8, 15, 0.20);
+@define-color neon_accent1 #00f0ff;
+@define-color neon_accent2 #ff2bd6;
+@define-color neon_text #d9fbff;
+@define-color neon_muted #5e6b86;
+@define-color neon_power #ff4d6d;
+```
+
 ## Iconos
 
 LazyVim dibuja los iconos con `mini.icons` (glifos de **Nerd Font v3**). El
