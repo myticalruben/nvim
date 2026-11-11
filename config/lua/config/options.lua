@@ -48,3 +48,10 @@ end
 
 vim.api.nvim_create_autocmd("VimEnter", { once = true, callback = start_neon })
 vim.api.nvim_create_autocmd("User", { pattern = "VeryLazy", once = true, callback = start_neon })
+
+-- Shell: usa el zsh del perfil (el que instala el dotfiles) si esta en PATH;
+-- si no, se queda con $SHELL. No empaquetamos otro zsh: el del dotfiles ya
+-- tiene su config de oh-my-zsh.
+if vim.fn.executable("zsh") == 1 then
+	vim.opt.shell = "zsh"
+end
